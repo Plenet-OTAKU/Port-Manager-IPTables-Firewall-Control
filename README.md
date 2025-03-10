@@ -163,7 +163,7 @@ iptables -P OUTPUT ACCEPT
 
 ---
 
-## ✅ Done!
+## Done!
 
 Your server firewall is now secured and fully managed. If you run into issues, check the logs:
 
@@ -172,9 +172,9 @@ nano /var/log/iptables-init.log
 
 ```
 
-## 📩 Support & Contributions
+## Support & Contributions
 
-💬 **Join the community:**
+**Join the community:**
 
 * **GitHub:** https://github.com/Plenet-OTAKU
 
@@ -182,6 +182,6 @@ nano /var/log/iptables-init.log
 
 * **TeamSpeak:** ts.theartofwar.eu
 
-Have **feature requests, ideas, or bug reports**? Feel free to reach out! 🚀
+Have **feature requests, ideas, or bug reports**? Feel free to reach out!
 
 ---
