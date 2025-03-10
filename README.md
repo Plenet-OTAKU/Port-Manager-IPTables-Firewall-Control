@@ -89,8 +89,6 @@ The **Port Manager will then apply the settings automatically**.
 
 bash
 
-KopierenBearbeiten
-
 ```
 # [80]="open:tcp"   # HTTP (Web Traffic) - Currently Disabled
 [80]="open:tcp"    # HTTP (Web Traffic) - Now Enabled
@@ -120,8 +118,6 @@ bash
 After adding the new port, **run the script again** to apply changes:
 
 bash
-
-KopierenBearbeiten
 
 ```
 bash /root/port-manager.sh
