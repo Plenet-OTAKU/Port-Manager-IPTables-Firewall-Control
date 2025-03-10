@@ -33,15 +33,15 @@ declare -A PORTS=(
 #	[5900]="closed:tcp" # VNC (Remote Desktop)
 
 ## Webserver
-#    [80]="open:tcp" # HTTP (Web Traffic)
-#    [443]="open:tcp" # HTTPS (Secure Web Traffic)
-#    [8080]="open:tcp" # Alternative HTTP (Often used for web servers)
-#    [8443]="closed:tcp" # Alternative HTTPS (Secure Web Traffic)
-#    [9000]="closed:tcp" # PHP-FPM / Web Services
+#	[80]="open:tcp" # HTTP (Web Traffic)
+#	[443]="open:tcp" # HTTPS (Secure Web Traffic)
+#	[8080]="open:tcp" # Alternative HTTP (Often used for web servers)
+#	[8443]="closed:tcp" # Alternative HTTPS (Secure Web Traffic)
+#	[9000]="closed:tcp" # PHP-FPM / Web Services
 
 ## Plesk Web Interface
-#   [8443]="open:tcp"  # Plesk Control Panel (HTTPS)
-#   [8880]="open:tcp"  # Plesk Control Panel (HTTP)
+#	[8443]="open:tcp"  # Plesk Control Panel (HTTPS)
+#	[8880]="open:tcp"  # Plesk Control Panel (HTTP)
 	
 ## Email Services
 #	[25]="closed:tcp" # SMTP (Mail Server - Sending Emails)
