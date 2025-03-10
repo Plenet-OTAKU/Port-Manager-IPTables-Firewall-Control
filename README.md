@@ -7,9 +7,13 @@ The **IPTables Port Manager** is a powerful and flexible script that allows you 
 ## Features
 
 **Dynamic Port Management** – Easily configure which ports are open, whitelisted, or blocked.
+
 **Whitelist & Internal Whitelist Support** – Control who has access to specific ports.
+
 **SSH Lockout Prevention** – Warns you before closing SSH (Port 22).
+
 **Automatic Rule Cleanup** – Removes outdated rules before applying new ones.
+
 **Persistent Firewall Rules** – Ensures settings remain active after a reboot.
 
 ---
@@ -118,7 +122,9 @@ iptables -P OUTPUT ACCEPT
 💬 **Join the community:**
 
 * **GitHub:** https://github.com/Plenet-OTAKU
+
 * **Website:** https://theartofwar.eu
+
 * **TeamSpeak:** ts.theartofwar.eu
 
 Have **feature requests, ideas, or bug reports**? Feel free to reach out! 🚀
