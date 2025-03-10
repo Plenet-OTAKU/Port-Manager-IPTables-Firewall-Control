@@ -23,7 +23,7 @@ The **IPTables Port Manager** is a powerful and flexible script that allows you 
 1. **Download the script**
 
 ```
-wget -O /root/port-manager.sh "https://theartofwar.eu/download/port-manager.sh"
+wget -O /root/port-manager.sh "https://raw.githubusercontent.com/Plenet-OTAKU/Port-Manager-IPTables-Firewall-Control/refs/heads/main/port-manager.sh"
 chmod +x /root/port-manager.sh
 ```
 
