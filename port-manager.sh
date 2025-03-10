@@ -8,14 +8,14 @@
 
 # Standard whitelist (these IPs are allowed to access permitted ports)
 WHITELIST=(
-    "123.123.123.1"			# example-1
-    "123.123.123.2"			# example-2
+    "123.123.123.1" # example-1
+    "123.123.123.2" # example-2
 )
 
 
 # Internal whitelist (VPNs or special IPs that have access to ALL ports)
 INTERNAL_WHITELIST=(
-	"123.123.123.123"		# example-VPN
+	"123.123.123.123" # example-VPN
 )
 
 
