@@ -106,8 +106,6 @@ You can manually add new ports by following the same **schema** used in the scri
 
 bash
 
-KopierenBearbeiten
-
 ```
 [28015]="open:udp"    # Rust Game Server
 [25565]="open:tcp"    # Minecraft Server
