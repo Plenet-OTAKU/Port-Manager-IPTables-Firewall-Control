@@ -80,6 +80,55 @@ declare -A PORTS=(
 * `whitelist` → Only `WHITELIST` IPs can access.
 * `closed` → Only `INTERNAL_WHITELIST` IPs can access.
 
+### **How to Enable Ports**
+
+**Remove the `#` at the beginning of a line to enable the corresponding port.**
+The **Port Manager will then apply the settings automatically**.
+
+#### Example:
+
+bash
+
+KopierenBearbeiten
+
+```
+# [80]="open:tcp"   # HTTP (Web Traffic) - Currently Disabled
+[80]="open:tcp"    # HTTP (Web Traffic) - Now Enabled
+```
+
+---
+
+### **How to Add Custom Ports**
+
+You can manually add new ports by following the same **schema** used in the script.
+
+#### **Example: Adding a Custom Game Server Port**
+
+bash
+
+KopierenBearbeiten
+
+```
+[28015]="open:udp"    # Rust Game Server
+[25565]="open:tcp"    # Minecraft Server
+[50000]="whitelist:tcp" # Custom Application (TCP)
+```
+
+* **Make sure to follow the format:**
+  * **`[PORT]="MODE:PROTOCOL"`**
+  * `MODE`: `open`, `whitelist`, `closed`
+  * `PROTOCOL`: `tcp` or `udp`
+
+After adding the new port, **run the script again** to apply changes:
+
+bash
+
+KopierenBearbeiten
+
+```
+bash /root/port-manager.sh
+```
+
 ---
 
 ## ⚠ SSH Lockout Warning
