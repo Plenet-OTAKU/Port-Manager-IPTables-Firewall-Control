@@ -117,6 +117,15 @@ iptables -P OUTPUT ACCEPT
 
 ---
 
+## ✅ Done!
+
+Your server firewall is now secured and fully managed. If you run into issues, check the logs:
+
+```
+nano /var/log/iptables-init.log
+
+```
+
 ## 📩 Support & Contributions
 
 💬 **Join the community:**
@@ -130,11 +139,3 @@ iptables -P OUTPUT ACCEPT
 Have **feature requests, ideas, or bug reports**? Feel free to reach out! 🚀
 
 ---
-
-## ✅ Done!
-
-Your server firewall is now secured and fully managed. If you run into issues, check the logs:
-
-```
-nano /var/log/iptables-init.log
-```
