@@ -102,6 +102,7 @@ declare -A PORTS=(
 #	[8087]="closed:tcp" # SinusBot Port
 
 )
+# Warning if SSH port (22) is set to "closed"
 if [[ ${PORTS[22]} =~ ^closed:(tcp|udp|both)$ ]]; then
     echo "[ Port-Manager ] WARNING: You have set SSH (Port 22) to 'closed'!"
     echo "[ Port-Manager ] If you are running this remotely and have no alternative access (like a VPN), you will LOCK YOURSELF OUT!"
@@ -110,11 +111,12 @@ if [[ ${PORTS[22]} =~ ^closed:(tcp|udp|both)$ ]]; then
     read -r response
 
     if [[ "$response" != "y" && "$response" != "Y" ]]; then
-        echo "[ Port-Manager ]Operation aborted. No changes were made."
+        echo "[ Port-Manager ] Operation aborted. No changes were made."
         exit 1
     fi
 fi
 
+# Remove outdated IP allow rules that are no longer in the whitelist
 iptables -S INPUT | grep "ACCEPT" | awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u | while read -r ip; do
     if [[ ! " ${WHITELIST[@]} ${INTERNAL_WHITELIST[@]} " =~ " ${ip} " ]]; then
         echo "[ Port-Manager ] Removing old rule for IP: $ip"
@@ -122,45 +124,7 @@ iptables -S INPUT | grep "ACCEPT" | awk '{print $4}' | grep -Eo '([0-9]{1,3}\.){
     fi
 done
 
-for port in "${!PORTS[@]}"; do
-    # If the port is set to open or whitelist for a specific protocol, ensure the other protocol is closed
-    if [[ "${PORTS[$port]}" =~ ^(open|whitelist):(tcp|udp)$ ]]; then
-        proto_to_close=$([[ "${PORTS[$port]}" =~ tcp ]] && echo "udp" || echo "tcp")
-        echo "[ Port-Manager ] Closing $proto_to_close on port $port since it is set to ${PORTS[$port]}"
-        add_rule "-p $proto_to_close --dport $port -j DROP"
-    fi
-    
-    # If the port is set to closed for a specific protocol, ensure the other protocol remains open
-    if [[ "${PORTS[$port]}" =~ ^closed:(tcp|udp)$ ]]; then
-        proto_to_keep_open=$([[ "${PORTS[$port]}" =~ tcp ]] && echo "udp" || echo "tcp")
-        echo "[ Port-Manager ] Keeping $proto_to_keep_open open on port $port since only ${PORTS[$port]} is closed"
-    fi
-    
-    # If the port is set to both, apply rules to both protocols
-    if [[ "${PORTS[$port]}" =~ ^(open|whitelist|closed):both$ ]]; then
-        echo "[ Port-Manager ] Applying rules for both TCP and UDP on port $port (${PORTS[$port]})"
-        add_rule "-p tcp --dport $port -j ACCEPT"
-        add_rule "-p udp --dport $port -j ACCEPT"
-    fi
-    
-    # If the port is set to open or whitelist for a specific protocol, ensure the other protocol is closed
-    if [[ "${PORTS[$port]}" =~ ^(open|whitelist):(tcp|udp)$ ]]; then
-        proto_to_close=$([[ "${PORTS[$port]}" =~ tcp ]] && echo "udp" || echo "tcp")
-        echo "[ Port-Manager ] Closing $proto_to_close on port $port since it is set to ${PORTS[$port]}"
-        add_rule "-p $proto_to_close --dport $port -j DROP"
-    fi
-    
-    # If the port is set to open for a specific protocol, ensure the other protocol is closed
-    if [[ "${PORTS[$port]}" =~ ^open:(tcp|udp)$ ]]; then
-        proto_to_close=$([[ "${PORTS[$port]}" =~ tcp ]] && echo "udp" || echo "tcp")
-        echo "[ Port-Manager ] Closing $proto_to_close on port $port since it is set to open for ${PORTS[$port]}"
-        add_rule "-p $proto_to_close --dport $port -j DROP"
-    fi
-    iptables -S | grep -- "--dport $port" | while read -r rule; do
-        iptables $(echo "$rule" | sed 's/^-A/-D/') 2>/dev/null
-    done
-done
-
+# Function to safely add an iptables rule
 add_rule() {
     local rule="$1"
     if ! iptables -C INPUT $rule 2>/dev/null; then
@@ -168,56 +132,79 @@ add_rule() {
     fi
 }
 
+# Allow loopback traffic
 add_rule "-i lo -j ACCEPT"
-add_rule "-m state --state ESTABLISHED,RELATED -j ACCEPT"
 
+# Allow internal whitelist access to all ports
 for IP in "${INTERNAL_WHITELIST[@]}"; do
     add_rule "-s $IP -j ACCEPT"
     echo "[ Port-Manager ] Internal whitelist: $IP has access to all ports"
 done
 
+
 for port in "${!PORTS[@]}"; do
     IFS=":" read -r mode proto <<< "${PORTS[$port]}"
 
-    if [ "$proto" = "both" ]; then
-        echo "[ Port-Manager ] Applying rules for both TCP and UDP on port $port"
-        add_rule "-p tcp --dport $port -j ACCEPT"
-        add_rule "-p udp --dport $port -j ACCEPT"
-    elif [ "$mode" = "open" ]; then
-        echo "[ Port-Manager ] Opening port $port for everyone ($proto)"
-        add_rule "-p $proto --dport $port -j ACCEPT"
-    elif [ "$mode" = "whitelist" ]; then
-        echo "[ Port-Manager ] Opening port $port only for whitelisted IPs ($proto)"
-        for IP in "${WHITELIST[@]}"; do
-            add_rule "-p $proto --dport $port -s $IP -j ACCEPT"
-        done
-    fi
+    case "$proto" in
+        "both")
+            if [[ "$mode" == "open" ]]; then
+                echo "[ Port-Manager ] Opening both TCP and UDP on port $port"
+                add_rule "-p tcp --dport $port -j ACCEPT"
+                add_rule "-p udp --dport $port -j ACCEPT"
+            elif [[ "$mode" == "whitelist" ]]; then
+                echo "[ Port-Manager ] Allowing only whitelisted access for both TCP and UDP on port $port"
+                for IP in "${WHITELIST[@]}"; do
+                    add_rule "-p tcp --dport $port -s $IP -j ACCEPT"
+                    add_rule "-p udp --dport $port -s $IP -j ACCEPT"
+                done
+            fi
+            ;;
+        "tcp"|"udp")
+            other_proto=$([[ "$proto" == "tcp" ]] && echo "udp" || echo "tcp")
 
+            if [[ "$mode" == "open" ]]; then
+                echo "[ Port-Manager ] Opening $proto on port $port"
+                add_rule "-p $proto --dport $port -j ACCEPT"
+            elif [[ "$mode" == "whitelist" ]]; then
+                echo "[ Port-Manager ] Allowing only whitelisted access for $proto on port $port"
+                for IP in "${WHITELIST[@]}"; do
+                    add_rule "-p $proto --dport $port -s $IP -j ACCEPT"
+                done
+            fi
+            ;;
+    esac
 done
 
 for port in "${!PORTS[@]}"; do
     IFS=":" read -r mode proto <<< "${PORTS[$port]}"
 
-    if [ "$proto" = "both" ]; then
-        if [ "$mode" = "closed" ]; then
-            echo "[ Port-Manager ] Blocking both TCP and UDP on port $port"
-            add_rule "-p tcp --dport $port -j DROP"
-            add_rule "-p udp --dport $port -j DROP"
-        elif [ "$mode" = "whitelist" ]; then
-            echo "[ Port-Manager ] Blocking all other access to port $port (both TCP & UDP)"
-            add_rule "-p tcp --dport $port -j DROP"
-            add_rule "-p udp --dport $port -j DROP"
-        fi
-    else
-        if [ "$mode" = "closed" ]; then
-            echo "[ Port-Manager ] Blocking port $port completely ($proto)"
-            add_rule "-p $proto --dport $port -j DROP"
-        elif [ "$mode" = "whitelist" ]; then
-            echo "[ Port-Manager ] Blocking all other access to port $port ($proto)"
-            add_rule "-p $proto --dport $port -j DROP"
-        fi
-    fi
+    case "$proto" in
+        "both")
+            if [[ "$mode" == "closed" ]]; then
+                echo "[ Port-Manager ] Blocking both TCP and UDP on port $port"
+                add_rule "-p tcp --dport $port -j DROP"
+                add_rule "-p udp --dport $port -j DROP"
+            elif [[ "$mode" == "whitelist" ]]; then
+                echo "[ Port-Manager ] Blocking non-whitelisted access to both TCP and UDP on port $port"
+                add_rule "-p tcp --dport $port -j DROP"
+                add_rule "-p udp --dport $port -j DROP"
+            fi
+            ;;
+        "tcp"|"udp")
+            other_proto=$([[ "$proto" == "tcp" ]] && echo "udp" || echo "tcp")
 
+            if [[ "$mode" == "closed" ]]; then
+                echo "[ Port-Manager ] Blocking only $proto on port $port, keeping $other_proto open"
+                add_rule "-p $proto --dport $port -j DROP"
+            elif [[ "$mode" == "whitelist" ]]; then
+                echo "[ Port-Manager ] Blocking non-whitelisted access to $proto on port $port"
+                add_rule "-p $proto --dport $port -j DROP"
+            elif [[ "$mode" == "open" ]]; then
+                echo "[ Port-Manager ] Closing $other_proto on port $port since only $proto is open"
+                add_rule "-p $other_proto --dport $port -j DROP"
+            fi
+            ;;
+    esac
 done
 
 echo "[ Port-Manager ] IPTables have been updated and saved."
