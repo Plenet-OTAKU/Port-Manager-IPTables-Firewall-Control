@@ -71,7 +71,7 @@ declare -A PORTS=(
     [3306]="closed:tcp"     # MySQL/MariaDB (Database Server)
     [5432]="closed:tcp"     # PostgreSQL (Database Server)
     [27015]="closed:udp"    # Steam Game Server (CS:GO, TF2, etc.)
-    [8089]="closed:both"    # SinusBot Port
+    [8087]="closed:both"    # SinusBot Port
 )
 ```
 
